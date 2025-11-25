@@ -1,0 +1,5 @@
+package com.lomash.mytrip.service;
+
+public interface EmailService {
+    void sendEmail(String to, String subject, String content);
+}

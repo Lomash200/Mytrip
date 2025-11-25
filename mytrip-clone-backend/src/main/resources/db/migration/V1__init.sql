@@ -1,0 +1,30 @@
+CREATE TABLE roles (
+id BIGINT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(50) NOT NULL UNIQUE
+);
+
+
+CREATE TABLE users (
+id BIGINT AUTO_INCREMENT PRIMARY KEY,
+username VARCHAR(100) UNIQUE,
+email VARCHAR(150) UNIQUE NOT NULL,
+password VARCHAR(255) NOT NULL,
+first_name VARCHAR(100),
+last_name VARCHAR(100),
+phone VARCHAR(30),
+enabled BOOLEAN DEFAULT TRUE,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE user_roles (
+user_id BIGINT,
+role_id BIGINT,
+PRIMARY KEY (user_id, role_id),
+FOREIGN KEY (user_id) REFERENCES users(id),
+FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+
+-- more tables: hotels, rooms, bookings, payments etc. Add as needed.
