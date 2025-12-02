@@ -1,241 +1,874 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>MyTrip - Admin/User Frontend Demo</title>
+    <meta charset="UTF-8" />
+    <title>MyTrip API Tester - Modern UI</title>
     <style>
-        /* Simple, neutral styles so you can improve later */
-        :root{--accent:#0066cc;--muted:#666}
-        body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.4;margin:0;padding:0;background:#f6f7fb;color:#111}
-        header{background:white;padding:12px 20px;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between}
-        header h1{font-size:18px;margin:0}
-        main{padding:18px;max-width:1100px;margin:24px auto}
-        .container{display:grid;grid-template-columns:1fr;gap:12px}
-        .card{background:white;padding:12px;border:1px solid #e9edf3;border-radius:8px}
-        .row{display:flex;gap:12px}
-        input,select,textarea,button{padding:8px;border:1px solid #d7dbe6;border-radius:6px}
-        input:focus,select:focus,textarea:focus{outline:2px solid rgba(0,102,204,0.12);border-color:var(--accent)}
-        nav{display:flex;gap:8px}
-        a.btn{background:var(--accent);color:white;padding:8px 10px;border-radius:6px;text-decoration:none}
-        .muted{color:var(--muted);font-size:13px}
-        .small{font-size:13px}
-        pre{background:#072; color:#fff;padding:8px;border-radius:6px;overflow:auto}
-        .list{display:grid;gap:8px}
-        .list .item{padding:10px;border:1px solid #eef2f7;border-radius:6px;background:#fff}
-        footer{padding:12px;text-align:center;color:var(--muted);font-size:13px}
-        .hint{background:#fff3cd;border:1px solid #ffeeba;padding:10px;border-radius:6px}
+        :root {
+          --primary: #2563eb;
+          --primary-light: #dbeafe;
+          --bg: #0f172a;
+          --card-bg: #020617;
+          --border: #1e293b;
+          --text: #e5e7eb;
+          --muted: #9ca3af;
+          --danger: #ef4444;
+          --success: #22c55e;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          background: radial-gradient(circle at top, #1e293b, #020617);
+          color: var(--text);
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        h1, h2, h3 {
+          margin: 0 0 8px;
+        }
+
+        .app {
+          max-width: 1200px;
+          margin: 20px auto;
+          padding: 16px;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .logo {
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+        }
+
+        .badge {
+          font-size: 12px;
+          padding: 2px 8px;
+          border-radius: 999px;
+          background: rgba(148, 163, 184, 0.15);
+          border: 1px solid rgba(148, 163, 184, 0.4);
+          color: var(--muted);
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns: 340px 1fr;
+          gap: 16px;
+          align-items: flex-start;
+        }
+
+        .card {
+          background: rgba(15, 23, 42, 0.95);
+          border-radius: 14px;
+          border: 1px solid var(--border);
+          padding: 14px 16px;
+          box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9);
+          backdrop-filter: blur(16px);
+        }
+
+        .card + .card {
+          margin-top: 10px;
+        }
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+
+        .card-title {
+          font-size: 15px;
+          font-weight: 600;
+        }
+
+        .card-subtitle {
+          font-size: 12px;
+          color: var(--muted);
+        }
+
+        label {
+          font-size: 12px;
+          color: var(--muted);
+          display: block;
+          margin-bottom: 4px;
+        }
+
+        input, textarea, select {
+          width: 100%;
+          border-radius: 8px;
+          border: 1px solid #1f2933;
+          background: #020617;
+          color: var(--text);
+          padding: 7px 9px;
+          font-size: 13px;
+          margin-bottom: 8px;
+          outline: none;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
+        }
+
+        textarea {
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        button {
+          border: none;
+          border-radius: 999px;
+          padding: 8px 14px;
+          background: var(--primary);
+          color: white;
+          font-weight: 500;
+          font-size: 13px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 4px;
+        }
+
+        button.secondary {
+          background: rgba(148, 163, 184, 0.2);
+          color: var(--text);
+        }
+
+        button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .small-text {
+          font-size: 11px;
+          color: var(--muted);
+        }
+
+        .pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          padding: 3px 8px;
+          border-radius: 999px;
+          background: rgba(37, 99, 235, 0.12);
+          border: 1px solid rgba(37, 99, 235, 0.35);
+          color: #bfdbfe;
+        }
+
+        .muted-pill {
+          background: rgba(15, 23, 42, 0.8);
+          border-color: #334155;
+          color: var(--muted);
+        }
+
+        .hotel-list, .room-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 8px;
+        }
+
+        .hotel-card, .room-card {
+          border-radius: 12px;
+          border: 1px solid #1f2937;
+          padding: 10px;
+          background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), rgba(15, 23, 42, 0.96));
+          cursor: pointer;
+          transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+        }
+
+        .room-card {
+          background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.16), rgba(15, 23, 42, 0.96));
+        }
+
+        .hotel-card:hover,
+        .room-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(15, 23, 42, 0.8);
+          border-color: var(--primary);
+        }
+
+        .hotel-card.selected,
+        .room-card.selected {
+          border-color: #22c55e;
+          box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.5);
+        }
+
+        .hotel-name {
+          font-size: 14px;
+          font-weight: 600;
+          margin-bottom: 4px;
+        }
+
+        .hotel-meta {
+          font-size: 12px;
+          color: var(--muted);
+          margin-bottom: 4px;
+        }
+
+        .hotel-price {
+          font-size: 13px;
+          font-weight: 500;
+          color: #bbf7d0;
+        }
+
+        .status-bar {
+          display: flex;
+          justify-content: space-between;
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 4px;
+        }
+
+        .output-card pre {
+          background: #020617;
+          border-radius: 10px;
+          padding: 12px;
+          font-size: 12px;
+          max-height: 420px;
+          overflow: auto;
+        }
+
+        .toast {
+          position: fixed;
+          right: 18px;
+          bottom: 18px;
+          background: rgba(15, 23, 42, 0.98);
+          border-radius: 999px;
+          padding: 8px 12px;
+          border: 1px solid rgba(148, 163, 184, 0.5);
+          font-size: 12px;
+          display: none;
+          align-items: center;
+          gap: 8px;
+          z-index: 50;
+        }
+
+        .toast.show {
+          display: inline-flex;
+          animation: fadeIn 0.18s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loader-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.5);
+          backdrop-filter: blur(2px);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 40;
+        }
+
+        .loader-backdrop.show {
+          display: flex;
+        }
+
+        .loader {
+          width: 38px;
+          height: 38px;
+          border-radius: 999px;
+          border: 3px solid rgba(148, 163, 184, 0.4);
+          border-top-color: var(--primary);
+          animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .tag-row {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+          margin-top: 4px;
+        }
+
+        .row {
+          display: flex;
+          gap: 6px;
+        }
+
+        .row > div {
+          flex: 1;
+        }
+
+        @media (max-width: 900px) {
+          .grid {
+            grid-template-columns: 1fr;
+          }
+        }
     </style>
 </head>
 <body>
-<header>
-    <h1>MyTrip — Frontend Demo (HTML/CSS/JS)</h1>
-    <nav>
-        <a href="#" id="nav-home" class="btn">Home</a>
-        <a href="#admin" id="nav-admin" class="btn">Admin</a>
-        <a href="#" id="nav-logout" style="display:none" class="btn">Logout</a>
-    </nav>
-</header>
-
-<main>
-    <div id="app" class="container">
-        <!-- Content injected by JS -->
+<div class="app">
+    <div class="header">
+        <div>
+            <div class="logo">MyTrip API Studio</div>
+            <div class="small-text">Test your Spring Boot backend without Postman – direct from browser.</div>
+        </div>
+        <div>
+            <span class="badge" id="authStatus">Not logged in</span>
+        </div>
     </div>
-    <footer>Demo UI to exercise backend APIs — use to discover which APIs exist / fail.</footer>
-</main>
+
+    <div class="grid">
+        <!-- LEFT COLUMN -->
+        <div>
+            <!-- AUTH -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Authentication</div>
+                        <div class="card-subtitle">Signup & Login to get JWT token.</div>
+                    </div>
+                    <span class="pill muted-pill">Step 1</span>
+                </div>
+
+                <label>Signup</label>
+                <input id="su_user" placeholder="Username" />
+                <input id="su_email" placeholder="Email" />
+                <input id="su_pass" type="password" placeholder="Password" />
+                <button onclick="signup()">Create account</button>
+
+                <div style="height:10px"></div>
+
+                <label>Login</label>
+                <input id="lo_user" placeholder="Username or Email" />
+                <input id="lo_pass" type="password" placeholder="Password" />
+                <button onclick="login()">Login & save token</button>
+                <div class="small-text" id="tokenPreview"></div>
+            </div>
+
+            <!-- HOTEL SEARCH -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Hotel Search</div>
+                        <div class="card-subtitle">Public GET/POST – filter hotels.</div>
+                    </div>
+                    <span class="pill">Hotels</span>
+                </div>
+
+                <div class="row">
+                    <div>
+                        <label>City</label>
+                        <input id="hotel_city" placeholder="Indore" />
+                    </div>
+                    <div>
+                        <label>Guests</label>
+                        <input id="hotel_guests" placeholder="2" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label>Check-in</label>
+                        <input id="hotel_in" placeholder="YYYY-MM-DD" />
+                    </div>
+                    <div>
+                        <label>Check-out</label>
+                        <input id="hotel_out" placeholder="YYYY-MM-DD" />
+                    </div>
+                </div>
+                <button onclick="searchHotels()">Search hotels</button>
+                <div class="small-text">Search result hotels will appear on the right → select one to load rooms.</div>
+            </div>
+
+            <!-- ROOM & BOOKING -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Booking</div>
+                        <div class="card-subtitle">Book selected room as logged-in user.</div>
+                    </div>
+                    <span class="pill">Bookings</span>
+                </div>
+
+                <div class="small-text">
+                    Selected hotel ID: <span id="selectedHotelLabel">–</span><br />
+                    Selected room ID: <span id="selectedRoomLabel">–</span>
+                </div>
+
+                <div style="height:8px"></div>
+
+                <div class="row">
+                    <div>
+                        <label>Check-in</label>
+                        <input id="b_in" placeholder="YYYY-MM-DD" />
+                    </div>
+                    <div>
+                        <label>Check-out</label>
+                        <input id="b_out" placeholder="YYYY-MM-DD" />
+                    </div>
+                </div>
+                <label>Guests</label>
+                <input id="b_guests" placeholder="2" />
+                <button onclick="loadRooms()">Load rooms of selected hotel</button>
+                <button onclick="createBooking()">Book selected room</button>
+                <button class="secondary" onclick="myBookings()">My bookings</button>
+            </div>
+
+            <!-- FLIGHT / WISHLIST / REVIEW SHORT -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Quick Actions</div>
+                    <span class="pill muted-pill">Extra</span>
+                </div>
+
+                <label>Flight Search</label>
+                <div class="row">
+                    <div><input id="f_from" placeholder="Origin ID" /></div>
+                    <div><input id="f_to" placeholder="Destination ID" /></div>
+                </div>
+                <input id="f_date" placeholder="Date (YYYY-MM-DD)" />
+                <button onclick="searchFlights()">Search flights</button>
+
+                <div style="height:8px"></div>
+                <label>Wishlist (HOTEL only)</label>
+                <div class="row">
+                    <div><input id="w_id" placeholder="Hotel ID" /></div>
+                </div>
+                <button onclick="addWishlist()">Add to wishlist</button>
+                <button class="secondary" onclick="getWishlist()">Get wishlist</button>
+
+                <div style="height:8px"></div>
+                <label>Add Review for Hotel</label>
+                <input id="r_id" placeholder="Hotel ID" />
+                <input id="r_rate" placeholder="Rating (1-5)" />
+                <textarea id="r_comment" placeholder="Your review..."></textarea>
+                <button onclick="addReview()">Submit review</button>
+            </div>
+
+            <!-- UNIVERSAL -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Universal API Tester</div>
+                    <span class="pill muted-pill">Advanced</span>
+                </div>
+                <label>Path (relative)</label>
+                <input id="api_url" placeholder="/api/users/me" />
+                <div class="row">
+                    <div>
+                        <label>Method</label>
+                        <select id="api_method">
+                            <option>GET</option>
+                            <option>POST</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Body (JSON)</label>
+                    </div>
+                </div>
+                <textarea id="api_body" placeholder='{"example": "value"} (leave empty for GET)'></textarea>
+                <button onclick="callApi()">Send request</button>
+                <div class="small-text">Authorization header automatically attaches current JWT if available.</div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+            <!-- HOTELS / ROOMS -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Hotels & Rooms</div>
+                        <div class="card-subtitle">Search results & room list for quick selection.</div>
+                    </div>
+                    <span class="pill">Live data</span>
+                </div>
+
+                <h3 style="font-size:13px;margin-top:0;">Hotels</h3>
+                <div id="hotelList" class="hotel-list small-text">
+                    <div class="small-text">Run a search from the left to see hotels here.</div>
+                </div>
+
+                <h3 style="font-size:13px;margin-top:12px;">Rooms of selected hotel</h3>
+                <div id="roomList" class="room-list small-text">
+                    <div class="small-text">Click "Load rooms" after selecting a hotel.</div>
+                </div>
+            </div>
+
+            <!-- OUTPUT -->
+            <div class="card output-card" style="margin-top:10px;">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">API Response</div>
+                        <div class="card-subtitle">Raw response (JSON or text) of last call.</div>
+                    </div>
+                    <span class="pill muted-pill" id="lastEndpointLabel">No request yet</span>
+                </div>
+                <pre id="res">Waiting for request…</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loader -->
+<div class="loader-backdrop" id="loader">
+    <div class="loader"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+    <span id="toastText"></span>
+</div>
 
 <script>
-    /** CONFIG - set your backend base URL here **/
-    const baseUrl = localStorage.getItem('MYTRIP_BASEURL') || 'http://localhost:8080';
-    // You can change it at runtime with the "Set base URL" control in the UI.
+    const API_BASE = "http://localhost:8080";
+    let token = "";
+    let lastHotels = [];
+    let lastRooms = [];
+    let selectedHotelId = null;
+    let selectedRoomId = null;
 
-    const app = document.getElementById('app');
-    const navLogout = document.getElementById('nav-logout');
+    const loaderEl = document.getElementById("loader");
+    const toastEl = document.getElementById("toast");
+    const toastText = document.getElementById("toastText");
+    const resEl = document.getElementById("res");
+    const lastEndpointLabel = document.getElementById("lastEndpointLabel");
+    const authStatus = document.getElementById("authStatus");
+    const tokenPreview = document.getElementById("tokenPreview");
+    const hotelList = document.getElementById("hotelList");
+    const roomList = document.getElementById("roomList");
+    const selectedHotelLabel = document.getElementById("selectedHotelLabel");
+    const selectedRoomLabel = document.getElementById("selectedRoomLabel");
 
-    function api(path, opts={}){
-      const token = localStorage.getItem('MYTRIP_TOKEN');
-      const headers = opts.headers || {};
-      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-      if(token) headers['Authorization'] = 'Bearer ' + token;
-      const cfg = Object.assign({method:'GET',headers},opts);
-      if(cfg.body && typeof cfg.body==='object') cfg.body = JSON.stringify(cfg.body);
-      return fetch(baseUrl + path, cfg).then(async r => {
-        const ct = r.headers.get('content-type')||'';
-        let body = null;
-        if(ct.includes('application/json')) body = await r.json();
-        else body = await r.text();
-        return {ok:r.ok,status:r.status,body};
+    function setLoading(isLoading) {
+      loaderEl.classList.toggle("show", isLoading);
+    }
+
+    function showToast(message) {
+      toastText.textContent = message;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 2500);
+    }
+
+    async function api(path, options = {}) {
+      const url = API_BASE + path;
+      lastEndpointLabel.textContent = path;
+      setLoading(true);
+      try {
+        const headers = options.headers || {};
+        headers["Content-Type"] = headers["Content-Type"] || "application/json";
+        if (token) {
+          headers["Authorization"] = "Bearer " + token;
+        }
+        const resp = await fetch(url, {
+          method: options.method || "GET",
+          headers,
+          body: options.body || null
+        });
+        const text = await resp.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+          resEl.textContent = JSON.stringify(data, null, 2);
+        } catch (_) {
+          data = text;
+          resEl.textContent = text;
+        }
+        if (!resp.ok) {
+          showToast("Error: " + resp.status);
+        }
+        return data;
+      } catch (err) {
+        resEl.textContent = "ERROR: " + err;
+        showToast("Network error");
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function updateAuthUI(username) {
+      if (token) {
+        authStatus.textContent = "Logged in as " + (username || "user");
+        authStatus.style.background = "rgba(34,197,94,0.15)";
+        authStatus.style.borderColor = "rgba(34,197,94,0.5)";
+      } else {
+        authStatus.textContent = "Not logged in";
+        authStatus.style.background = "rgba(148, 163, 184, 0.15)";
+        authStatus.style.borderColor = "rgba(148, 163, 184, 0.5)";
+      }
+    }
+
+    // AUTH
+    async function signup() {
+      const body = {
+        username: document.getElementById("su_user").value,
+        email: document.getElementById("su_email").value,
+        password: document.getElementById("su_pass").value
+      };
+      await api("/api/auth/signup", {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      showToast("Signup attempted");
+    }
+
+    async function login() {
+      const body = {
+        usernameOrEmail: document.getElementById("lo_user").value,
+        password: document.getElementById("lo_pass").value
+      };
+      const data = await api("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      if (data && data.token) {
+        token = data.token;
+        tokenPreview.textContent = "Token: " + data.token.substring(0, 30) + "...";
+        updateAuthUI(data.username || body.usernameOrEmail);
+        showToast("Login successful");
+      } else {
+        showToast("Login failed");
+      }
+    }
+
+    // HOTELS
+    async function searchHotels() {
+      const body = {
+        city: document.getElementById("hotel_city").value || null,
+        checkInDate: document.getElementById("hotel_in").value || null,
+        checkOutDate: document.getElementById("hotel_out").value || null,
+        guests: parseInt(document.getElementById("hotel_guests").value || "1", 10)
+      };
+      const data = await api("/api/hotels/search", {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      if (Array.isArray(data)) {
+        lastHotels = data;
+        renderHotels();
+        showToast("Hotels loaded: " + data.length);
+      }
+    }
+
+    function renderHotels() {
+      hotelList.innerHTML = "";
+      if (!lastHotels.length) {
+        hotelList.innerHTML = "<div class='small-text'>No hotels found.</div>";
+        return;
+      }
+      lastHotels.forEach(hotel => {
+        const card = document.createElement("div");
+        card.className = "hotel-card" + (hotel.id === selectedHotelId ? " selected" : "");
+        card.onclick = () => selectHotel(hotel.id);
+
+        const name = hotel.name || ("Hotel #" + hotel.id);
+        const city = hotel.city || hotel.location || "Unknown city";
+        const rating = hotel.rating != null ? hotel.rating : "–";
+        const price = hotel.minPrice || hotel.pricePerNight || hotel.basePrice || null;
+
+        card.innerHTML = `
+          <div class="hotel-name">${name}</div>
+          <div class="hotel-meta">${city}</div>
+          <div class="tag-row">
+            <span class="pill muted-pill">ID: ${hotel.id}</span>
+            <span class="pill muted-pill">Rating: ${rating}</span>
+          </div>
+          <div class="status-bar">
+            <div class="hotel-price">${price ? "From ₹" + price : "Price: N/A"}</div>
+          </div>
+        `;
+        hotelList.appendChild(card);
       });
     }
 
-    // --- Small Router ---
-    function showHome(){
-      app.innerHTML = `
-        <div class="card">
-          <h2>Quick Controls</h2>
-          <div class="row">
-            <input id="baseurl" placeholder="Backend base URL" value="${baseUrl}" style="flex:1" />
-            <button id="save-base">Set base URL</button>
-          </div>
-          <p class="muted">Set the base URL so all examples below call the correct server.</p>
-        </div>
+    function selectHotel(id) {
+      selectedHotelId = id;
+      selectedRoomId = null;
+      selectedHotelLabel.textContent = id;
+      selectedRoomLabel.textContent = "–";
+      renderHotels();
+      roomList.innerHTML = "<div class='small-text'>Click \"Load rooms\" to fetch rooms for hotel " + id + ".</div>";
+      showToast("Hotel selected: " + id);
+    }
 
-        <div class="card">
-          <h2>Auth (User)</h2>
-          <div class="row">
-            <input id="signup-user" placeholder='username' />
-            <input id="signup-email" placeholder='email' />
-            <input id="signup-pass" placeholder='password' />
-            <button id="btn-signup">Signup</button>
-          </div>
-          <div style="height:8px"></div>
-          <div class="row">
-            <input id="login-user" placeholder='username' />
-            <input id="login-pass" placeholder='password' />
-            <button id="btn-login">Login</button>
-          </div>
-          <div id="auth-result" class="muted small"></div>
-        </div>
-
-        <div class="card">
-          <h2>Hotel - Search & Booking</h2>
-          <div class="row">
-            <input id="city" placeholder="city" value="Indore" />
-            <input id="checkin" type="date" />
-            <input id="checkout" type="date" />
-            <button id="btn-search-hotels">Search Hotels</button>
-          </div>
-          <div id="hotels-list" class="list"></div>
-        </div>
-
-        <div class="card hint">
-          <strong>Note:</strong> This page calls several backend APIs directly. If a call fails you will see the status and body — use that to find missing / broken endpoints.
-        </div>
-      `;
-
-      document.getElementById('save-base').onclick = ()=>{
-        const val = document.getElementById('baseurl').value.trim();
-        localStorage.setItem('MYTRIP_BASEURL', val);
-        location.reload();
+    async function loadRooms() {
+      if (!selectedHotelId) {
+        showToast("Select a hotel first");
+        return;
       }
-
-      document.getElementById('btn-signup').onclick = async ()=>{
-        const username = document.getElementById('signup-user').value||'testuser';
-        const email = document.getElementById('signup-email').value||'test@local';
-        const password = document.getElementById('signup-pass').value||'Pass@123';
-        const res = await api('/api/auth/signup',{method:'POST',body:{username,email,password,fullName:username}});
-        document.getElementById('auth-result').innerText = JSON.stringify(res,null,2);
-      }
-
-      document.getElementById('btn-login').onclick = async ()=>{
-        const username = document.getElementById('login-user').value||'testuser';
-        const password = document.getElementById('login-pass').value||'Pass@123';
-        const res = await api('/api/auth/login',{method:'POST',body:{username,password}});
-        document.getElementById('auth-result').innerText = JSON.stringify(res,null,2);
-        if(res.ok && res.body && (res.body.token || res.body.accessToken || res.body.data?.token)){
-          const token = res.body.token || res.body.accessToken || res.body.data?.token;
-          localStorage.setItem('MYTRIP_TOKEN', token);
-          navLogout.style.display = 'inline-block';
-          alert('Login ok - token saved to localStorage');
-        }
-      }
-
-      document.getElementById('btn-search-hotels').onclick = async ()=>{
-        const city = document.getElementById('city').value||'Indore';
-        const checkin = document.getElementById('checkin').value || new Date().toISOString().slice(0,10);
-        const checkout = document.getElementById('checkout').value || new Date(Date.now()+2*86400000).toISOString().slice(0,10);
-        const res = await api(`/api/search/hotels?city=${encodeURIComponent(city)}&checkIn=${checkin}&checkOut=${checkout}&guests=2`);
-        const list = document.getElementById('hotels-list');
-        list.innerHTML='';
-        if(!res.ok){ list.innerHTML = '<pre>'+res.status+'\n'+JSON.stringify(res.body,null,2)+'</pre>'; return }
-        if(!Array.isArray(res.body)){
-          list.innerHTML = '<pre>Expected array, got:'+JSON.stringify(res.body,null,2)+'</pre>'; return
-        }
-        res.body.forEach(h =>{
-          const el = document.createElement('div'); el.className='item';
-          el.innerHTML = `<strong>${h.name || h.hotelName || 'Hotel'}</strong> <div class='muted small'>Price: ${h.startingPrice||h.price||h.amount||'N/A'}</div>
-          <div style='margin-top:8px'><button class='btn-book' data-id='${h.hotelId||h.id||h.hotel_id}'>Book</button> <button class='btn-details' data-id='${h.hotelId||h.id||h.hotel_id}'>Details</button></div>`;
-          list.appendChild(el);
-        });
-
-        // attach
-        list.querySelectorAll('.btn-book').forEach(b=>b.onclick=async (e)=>{
-          const hotelId = e.target.dataset.id;
-          const roomId = prompt('Enter roomId to book (find from details)');
-          if(!roomId) return;
-          const body = {hotelId: Number(hotelId), roomId: Number(roomId), checkIn: checkin, checkOut: checkout, guests:2};
-          const r = await api('/api/bookings',{method:'POST',body});
-          alert(JSON.stringify(r,null,2));
-        });
-
-        list.querySelectorAll('.btn-details').forEach(b=>b.onclick=async (e)=>{
-          const id = e.target.dataset.id;
-          const r = await api('/api/hotels/'+id);
-          alert(JSON.stringify(r,null,2));
-        });
+      const data = await api(`/api/hotels/${selectedHotelId}/rooms`, {
+        method: "GET"
+      });
+      if (Array.isArray(data)) {
+        lastRooms = data;
+        renderRooms();
+        showToast("Rooms loaded: " + data.length);
       }
     }
 
-    function showAdmin(){
-      app.innerHTML = `
-        <div class="card">
-          <h2>Admin Console</h2>
-          <div class="row">
-            <input id="admin-user" placeholder="admin username" />
-            <input id="admin-pass" placeholder="admin password" />
-            <button id="admin-login">Login Admin</button>
+    function renderRooms() {
+      roomList.innerHTML = "";
+      if (!lastRooms.length) {
+        roomList.innerHTML = "<div class='small-text'>No rooms found.</div>";
+        return;
+      }
+      lastRooms.forEach(room => {
+        const card = document.createElement("div");
+        card.className = "room-card" + (room.id === selectedRoomId ? " selected" : "");
+        card.onclick = () => selectRoom(room.id);
+
+        const type = room.roomType || room.type || "Room";
+        const price = room.pricePerNight || room.price || "N/A";
+        const guests = room.maxGuests || room.capacity || "–";
+
+        card.innerHTML = `
+          <div class="hotel-name">${type}</div>
+          <div class="hotel-meta">Room ID: ${room.id}</div>
+          <div class="tag-row">
+            <span class="pill muted-pill">Max guests: ${guests}</span>
           </div>
-          <p class="muted">After admin login, token will be saved and you can call admin endpoints.</p>
-        </div>
-
-        <div class="card">
-          <h3>Admin Actions</h3>
-          <div class="row">
-            <button id="a-hotels">List Hotels (GET /api/admin/hotels)</button>
-            <button id="a-flights">List Flights (GET /api/admin/flights)</button>
-            <button id="a-bookings">List Bookings (GET /api/admin/bookings)</button>
+          <div class="status-bar">
+            <div class="hotel-price">₹${price} / night</div>
           </div>
-          <div id="admin-result"></div>
-        </div>
-      `;
-
-      document.getElementById('admin-login').onclick = async ()=>{
-        const u = document.getElementById('admin-user').value||'admin';
-        const p = document.getElementById('admin-pass').value||'admin';
-        // assume admin uses same auth path
-        const res = await api('/api/auth/login',{method:'POST',body:{username:u,password:p}});
-        document.getElementById('admin-result').innerText = JSON.stringify(res,null,2);
-        if(res.ok && res.body && (res.body.token || res.body.accessToken)){
-          const t = res.body.token || res.body.accessToken;
-          localStorage.setItem('MYTRIP_TOKEN', t);
-          navLogout.style.display = 'inline-block';
-          alert('Admin login OK - token saved');
-        }
-      }
-
-      document.getElementById('a-hotels').onclick = async ()=>{
-        const r = await api('/api/admin/hotels');
-        document.getElementById('admin-result').innerText = JSON.stringify(r,null,2);
-      }
-      document.getElementById('a-flights').onclick = async ()=>{
-        const r = await api('/api/admin/flights');
-        document.getElementById('admin-result').innerText = JSON.stringify(r,null,2);
-      }
-      document.getElementById('a-bookings').onclick = async ()=>{
-        const r = await api('/api/admin/bookings');
-        document.getElementById('admin-result').innerText = JSON.stringify(r,null,2);
-      }
+        `;
+        roomList.appendChild(card);
+      });
     }
 
-    // logout
-    navLogout.onclick = ()=>{ localStorage.removeItem('MYTRIP_TOKEN'); navLogout.style.display='none'; alert('Logged out'); }
+    function selectRoom(id) {
+      selectedRoomId = id;
+      selectedRoomLabel.textContent = id;
+      renderRooms();
+      showToast("Room selected: " + id);
+    }
 
-    document.getElementById('nav-home').onclick = (e)=>{ e.preventDefault(); showHome(); }
-    document.getElementById('nav-admin').onclick = (e)=>{ e.preventDefault(); showAdmin(); }
+    // BOOKING
+    async function createBooking() {
+      if (!token) {
+        showToast("Login required");
+        return;
+      }
+      if (!selectedHotelId || !selectedRoomId) {
+        showToast("Select hotel & room first");
+        return;
+      }
+      const body = {
+        hotelId: selectedHotelId,
+        roomId: selectedRoomId,
+        checkInDate: document.getElementById("b_in").value,
+        checkOutDate: document.getElementById("b_out").value,
+        guests: parseInt(document.getElementById("b_guests").value || "1", 10),
+        userId: 1 // backend can also infer from token, adjust if needed
+      };
+      await api("/api/bookings/create", {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      showToast("Booking request sent");
+    }
 
-    // initial view
-    showHome();
+    async function myBookings() {
+      if (!token) {
+        showToast("Login required");
+        return;
+      }
+      await api("/api/bookings/me");
+    }
 
+    // FLIGHT
+    async function searchFlights() {
+      const body = {
+        originId: parseInt(document.getElementById("f_from").value || "1", 10),
+        destinationId: parseInt(document.getElementById("f_to").value || "2", 10),
+        date: document.getElementById("f_date").value || null
+      };
+      await api("/api/search/flights", {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      showToast("Flight search sent");
+    }
+
+    // WISHLIST
+    async function addWishlist() {
+      if (!token) {
+        showToast("Login required");
+        return;
+      }
+      const hotelId = document.getElementById("w_id").value || selectedHotelId;
+      if (!hotelId) {
+        showToast("Provide hotel ID");
+        return;
+      }
+      await api(`/api/wishlist/HOTEL/${hotelId}`, { method: "POST" });
+      showToast("Wishlist add request sent");
+    }
+
+    async function getWishlist() {
+      if (!token) {
+        showToast("Login required");
+        return;
+      }
+      await api("/api/wishlist");
+    }
+
+    // REVIEW
+    async function addReview() {
+      if (!token) {
+        showToast("Login required");
+        return;
+      }
+      const body = {
+        targetType: "HOTEL",
+        targetId: parseInt(document.getElementById("r_id").value || selectedHotelId || "0", 10),
+        rating: parseInt(document.getElementById("r_rate").value || "5", 10),
+        title: "Quick review",
+        comment: document.getElementById("r_comment").value || "No comment"
+      };
+      await api("/api/reviews", {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      showToast("Review submitted");
+    }
+
+    // UNIVERSAL TESTER
+    async function callApi() {
+      const path = document.getElementById("api_url").value || "/api/users/me";
+      const method = document.getElementById("api_method").value;
+      const bodyText = document.getElementById("api_body").value.trim();
+      let body = null;
+      if (method === "POST" && bodyText) {
+        try {
+          body = JSON.stringify(JSON.parse(bodyText));
+        } catch (e) {
+          showToast("Invalid JSON in body");
+          return;
+        }
+      }
+      await api(path, {
+        method,
+        body
+      });
+    }
+
+    // Init
+    updateAuthUI();
 </script>
 </body>
 </html>
