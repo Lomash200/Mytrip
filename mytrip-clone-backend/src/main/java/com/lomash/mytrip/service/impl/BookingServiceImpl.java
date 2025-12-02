@@ -2,142 +2,205 @@ package com.lomash.mytrip.service.impl;
 
 import com.lomash.mytrip.dto.booking.BookingRequest;
 import com.lomash.mytrip.dto.booking.BookingResponse;
-import com.lomash.mytrip.entity.*;
-import com.lomash.mytrip.entity.enums.BookingStatus;
-import com.lomash.mytrip.exception.ApiException;
+import com.lomash.mytrip.entity.Booking;
+import com.lomash.mytrip.entity.Room;
 import com.lomash.mytrip.repository.*;
+
+import com.lomash.mytrip.service.AuthService;
 import com.lomash.mytrip.service.BookingService;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.List;
-import java.util.UUID;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 @Service
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final UserRepository userRepository;
-    private final HotelRepository hotelRepository;
     private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
+    private final PaymentRecordRepository paymentRecordRepository;
+    private final AuthService authService;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository,
-                              HotelRepository hotelRepository, RoomRepository roomRepository) {
+    @PersistenceContext
+    private EntityManager em;
+
+    private static final double GST_PERCENT = 0.18;
+    private static final double SERVICE_FEE = 149.0;
+    private static final double CONVENIENCE_FEE = 99.0;
+    private static final long RESERVATION_MINUTES = 15L;
+
+    public BookingServiceImpl(BookingRepository bookingRepository,
+                              RoomRepository roomRepository,
+                              UserRepository userRepository,
+                              PaymentRecordRepository paymentRecordRepository,
+                              AuthService authService) {
+
         this.bookingRepository = bookingRepository;
-        this.userRepository = userRepository;
-        this.hotelRepository = hotelRepository;
         this.roomRepository = roomRepository;
+        this.userRepository = userRepository;
+        this.paymentRecordRepository = paymentRecordRepository;
+        this.authService = authService;
     }
 
-    private User getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ApiException("User not found"));
+    // ============================
+    // CREATE BOOKING (LOGGED USER)
+    // ============================
+    @Override
+    @Transactional
+    public BookingResponse createBooking(BookingRequest request, Long loggedUserId) {
+        return createBookingInternal(request, loggedUserId);
     }
 
-    private BookingResponse mapToResponse(Booking b) {
-        return BookingResponse.builder()
-                .id(b.getId())
-                .referenceCode(b.getReferenceCode())
-                .status(b.getStatus().name())
-                .totalAmount(b.getTotalAmount())
-                .hotelName(b.getHotel().getName())
-                .roomType(b.getRoom().getRoomType())
-                .checkInDate(b.getCheckInDate().toString())
-                .checkOutDate(b.getCheckOutDate().toString())
-                .build();
-    }
-
+    // ============================
+    // CREATE BOOKING (GUEST)
+    // ============================
     @Override
     @Transactional
     public BookingResponse createBooking(BookingRequest request) {
+        return createBookingInternal(request, null);
+    }
 
-        User user = getCurrentUser();
+    // ============================
+    // INTERNAL BOOKING LOGIC
+    // ============================
+    private BookingResponse createBookingInternal(BookingRequest request, Long loggedUserId) {
 
-        Hotel hotel = hotelRepository.findById(request.getHotelId())
-                .orElseThrow(() -> new ApiException("Hotel not found"));
+        LocalDate checkIn = request.getCheckInDate();
+        LocalDate checkOut = request.getCheckOutDate();
 
-        Room room = roomRepository.findById(request.getRoomId())
-                .orElseThrow(() -> new ApiException("Room not found"));
-
-        if (room.getAvailabilityCount() <= 0) {
-            throw new ApiException("Room unavailable");
+        if (checkIn == null || checkOut == null || !checkOut.isAfter(checkIn)) {
+            return BookingResponse.failed("Invalid check-in/check-out dates");
         }
 
-        // Convert String -> LocalDate
-        LocalDate checkIn;
-        LocalDate checkOut;
-
-        try {
-            checkIn = LocalDate.parse(request.getCheckInDate());
-            checkOut = LocalDate.parse(request.getCheckOutDate());
-        } catch (DateTimeParseException e) {
-            throw new ApiException("Invalid date format. Use yyyy-MM-dd");
+        Optional<Room> optionalRoom = roomRepository.findByIdForUpdate(request.getRoomId());
+        if (optionalRoom.isEmpty()) {
+            return BookingResponse.failed("Room not found");
         }
 
-        if (checkOut.isBefore(checkIn)) {
-            throw new ApiException("Checkout date must be after check-in date");
+        Room room = optionalRoom.get();
+
+        if (request.getGuests() > room.getCapacity()) {
+            return BookingResponse.failed("Guest count exceeds room capacity");
         }
 
-        // price calculation (simple version)
-        double total = room.getPricePerNight();
+        List<Booking> overlapping =
+                bookingRepository.findByRoomIdAndCheckOutDateGreaterThanAndCheckInDateLessThan(
+                        room.getId(), checkIn, checkOut);
 
-        // reduce room availability
-        room.setAvailabilityCount(room.getAvailabilityCount() - 1);
-        roomRepository.save(room);
+        if (!overlapping.isEmpty()) {
+            return BookingResponse.failed("Room is not available");
+        }
+
+        // Nights
+        long nights = Math.max(1,
+                Duration.between(checkIn.atStartOfDay(), checkOut.atStartOfDay()).toDays()
+        );
+
+        // Price breakdown
+        double baseAmount = room.getPricePerNight() * nights;
+        double gstAmount = baseAmount * GST_PERCENT;
+        double finalAmount = baseAmount + gstAmount + SERVICE_FEE + CONVENIENCE_FEE;
+
+        Instant expiresAt = Instant.now().plus(RESERVATION_MINUTES, ChronoUnit.MINUTES);
 
         Booking booking = Booking.builder()
-                .referenceCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .hotel(room.getHotel())
+                .room(room)
                 .checkInDate(checkIn)
                 .checkOutDate(checkOut)
                 .guests(request.getGuests())
-                .totalAmount(total)
-                .status(BookingStatus.PENDING)
-                .hotel(hotel)
-                .room(room)
-                .user(user)
+                .totalAmount(finalAmount)
+                .referenceCode(generateReferenceCode())
+                .paymentStatus("PENDING_PAYMENT")
+                .reservationExpiresAt(expiresAt)
                 .build();
 
-        return mapToResponse(bookingRepository.save(booking));
-    }
-
-    @Override
-    @Transactional
-    public BookingResponse cancelBooking(Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ApiException("Booking not found"));
-
-        if (booking.getStatus() == BookingStatus.CANCELLED) {
-            throw new ApiException("Already cancelled");
+        if (loggedUserId != null) {
+            userRepository.findById(loggedUserId).ifPresent(booking::setUser);
         }
 
-        // increase room availability
-        Room room = booking.getRoom();
-        room.setAvailabilityCount(room.getAvailabilityCount() + 1);
-        roomRepository.save(room);
+        Booking saved = bookingRepository.save(booking);
 
-        booking.setStatus(BookingStatus.CANCELLED);
-        bookingRepository.save(booking);
-
-        return mapToResponse(booking);
+        return BookingResponse.success(
+                saved.getId(),
+                saved.getReferenceCode(),
+                saved.getHotel().getId(),
+                saved.getRoom().getId(),
+                checkIn,
+                checkOut,
+                saved.getGuests(),
+                baseAmount,
+                gstAmount,
+                SERVICE_FEE,
+                CONVENIENCE_FEE,
+                finalAmount,
+                "Room reserved! Complete payment before: " + expiresAt
+        );
     }
 
+    // ============================
+    // USER BOOKINGS
+    // ============================
     @Override
     public List<BookingResponse> getMyBookings() {
-        User user = getCurrentUser();
-        return bookingRepository.findByUser(user)
-                .stream().map(this::mapToResponse).toList();
+        Long userId = authService.getLoggedUser().getId();
+
+        return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
+    // ============================
+    // ADMIN ALL BOOKINGS
+    // ============================
     @Override
     public List<BookingResponse> getAllBookings() {
-        return bookingRepository.findAll()
-                .stream().map(this::mapToResponse).toList();
+        return bookingRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private BookingResponse mapToResponse(Booking b) {
+        return BookingResponse.successList(
+                b.getId(),
+                b.getReferenceCode(),
+                b.getHotel().getId(),
+                b.getRoom().getId(),
+                b.getCheckInDate(),
+                b.getCheckOutDate(),
+                b.getGuests(),
+                b.getTotalAmount(),
+                b.getPaymentStatus()
+        );
+    }
+
+    // ============================
+    // CANCEL BOOKING (placeholder)
+    // ============================
+    @Override
+    public BookingResponse cancelBooking(Long id) {
+        return BookingResponse.failed("Refund logic will be added later");
+    }
+
+    // ============================
+    // HELPERS
+    // ============================
+    private String generateReferenceCode() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random rnd = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        return "BKG-" + sb;
     }
 }

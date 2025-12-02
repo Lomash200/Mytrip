@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Coupon {
 
@@ -23,5 +24,6 @@ public class Coupon {
 
     private LocalDateTime expiryDate;
 
+    @Builder.Default  // ✅ FIX: Add this annotation
     private Boolean active = true;
 }

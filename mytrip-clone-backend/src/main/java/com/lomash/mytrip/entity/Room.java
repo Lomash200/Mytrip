@@ -18,16 +18,28 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String roomType;        // SINGLE, DOUBLE, SUITE
+    private String roomNumber;
+    private String roomType;
+
+    @Builder.Default
+    private int capacity = 2;
+
+    @Builder.Default
+    private int maxGuests = 2;
+
     private double pricePerNight;
-    private int maxGuests;
-    private int availabilityCount;
-    private List<String> images = new ArrayList<>();
+    private String description;
+
+    @Builder.Default
+    private int availabilityCount = 1;
+
+    private String imageUrl;
+
     @ElementCollection
+    @Builder.Default
+    private List<String> images = new ArrayList<>();
 
-
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hotel_id")
     private Hotel hotel;
 }

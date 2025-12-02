@@ -6,6 +6,7 @@ import lombok.Data;
 public class HotelRequest {
     private String name;
     private String description;
+    private String city;
     private Long locationId;
     private String address;
     private double rating; // optional

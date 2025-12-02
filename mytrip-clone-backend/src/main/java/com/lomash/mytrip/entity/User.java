@@ -1,13 +1,10 @@
 package com.lomash.mytrip.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
-
 import java.time.Instant;
 import java.util.Set;
-
 
 @Entity
 @Table(name = "users")
@@ -21,28 +18,24 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @Column(unique = true)
     private String username;
-
 
     @Column(unique = true, nullable = false)
     private String email;
 
-
     @Column(nullable = false)
     private String password;
-
 
     private String firstName;
     private String lastName;
     private String phone;
-    private boolean enabled = true;
 
+    @Builder.Default  // ✅ FIX: Add this annotation
+    private boolean enabled = true;
 
     private Instant createdAt;
     private Instant updatedAt;
-
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",

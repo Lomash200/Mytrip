@@ -1,34 +1,32 @@
 package com.lomash.mytrip.controller;
 
+import com.lomash.mytrip.common.ApiResponse;
 import com.lomash.mytrip.service.FileStorageService;
-import com.lomash.mytrip.service.RoomService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/admin/rooms")
-@PreAuthorize("hasRole('ADMIN')")
+@RequestMapping("/api/rooms")
 public class RoomImageController {
 
     private final FileStorageService fileStorageService;
-    private final RoomService roomService;
 
-    public RoomImageController(FileStorageService fileStorageService, RoomService roomService) {
+    public RoomImageController(FileStorageService fileStorageService) {
         this.fileStorageService = fileStorageService;
-        this.roomService = roomService;
     }
 
-    @PostMapping("/{roomId}/images")
-    public ResponseEntity<?> uploadRoomImage(
+    @PostMapping("/{roomId}/upload-image")
+    public ApiResponse<?> uploadRoomImage(
             @PathVariable Long roomId,
-            @RequestParam("image") MultipartFile file) {
+            @RequestParam("image") MultipartFile file
+    ) {
 
-        String url = fileStorageService.saveFile(file, "rooms/" + roomId);
+        try {
+            String fileName = fileStorageService.saveFile(file, "room-images");
+            return ApiResponse.ok("Room image uploaded", fileName);
 
-        roomService.addRoomImage(roomId, url);
-
-        return ResponseEntity.ok(url);
+        } catch (Exception e) {
+            return ApiResponse.error("Failed: " + e.getMessage());
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.lomash.mytrip.dto.booking.BookingResponse;
 import java.util.List;
 
 public interface BookingService {
+    BookingResponse createBooking(BookingRequest request, Long loggedUserId);
 
     BookingResponse createBooking(BookingRequest request);
 

@@ -20,17 +20,18 @@ public class Booking {
     private Long id;
 
     private String referenceCode;
-
-    // Use LocalDate for check-in / check-out (date-only)
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
-
     private int guests;
-
     private double totalAmount;
 
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
+
+    // Payment fields
+    private String orderId;
+    private String paymentStatus;
+    private Instant reservationExpiresAt;
 
     @ManyToOne
     private User user;
@@ -41,7 +42,6 @@ public class Booking {
     @ManyToOne
     private Room room;
 
-    // Timestamps for auditing / reports
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -50,6 +50,12 @@ public class Booking {
         Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.paymentStatus == null) {
+            this.paymentStatus = "PENDING_PAYMENT";
+        }
+        if (this.status == null) {
+            this.status = BookingStatus.PENDING;
+        }
     }
 
     @PreUpdate

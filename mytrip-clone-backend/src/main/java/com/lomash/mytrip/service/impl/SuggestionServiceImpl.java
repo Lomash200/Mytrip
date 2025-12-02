@@ -75,7 +75,7 @@ public class SuggestionServiceImpl implements SuggestionService {
                     .type("HOTEL")
                     .id(h.getId())
                     .title(h.getName())
-                    .subtitle(h.getLocation() != null ? h.getLocation().getName() : "")
+                    .subtitle(h.getCity() != null ? h.getCity() : "")
                     .build());
         }
 

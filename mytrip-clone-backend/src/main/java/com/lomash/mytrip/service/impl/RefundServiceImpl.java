@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lomash.mytrip.dto.refund.RefundRequest;
 import com.lomash.mytrip.dto.refund.RefundResponse;
 import com.lomash.mytrip.entity.Booking;
-import com.lomash.mytrip.entity.Payment;
+import com.lomash.mytrip.entity.PaymentRecord;
 import com.lomash.mytrip.entity.enums.BookingStatus;
 import com.lomash.mytrip.exception.ApiException;
 import com.lomash.mytrip.repository.BookingRepository;
@@ -52,13 +52,13 @@ public class RefundServiceImpl implements RefundService {
                 .orElseThrow(() -> new ApiException("Booking not found"));
 
         // 2️⃣ Payment fetch
-        Optional<Payment> optPay = paymentRepository.findByBooking(booking);
+        Optional<PaymentRecord> optPay = paymentRepository.findByBooking(booking);
 
         if (optPay.isEmpty()) {
             throw new ApiException("Payment not found for booking.");
         }
 
-        Payment payment = optPay.get();
+        PaymentRecord payment = optPay.get();
 
         // 3️⃣ Validate status
         if (!payment.getStatus().equalsIgnoreCase("SUCCESS")) {

@@ -8,10 +8,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
+
+
 
     // ========================= USER BOOKINGS =========================
     List<Booking> findByUser(User user);
@@ -58,4 +63,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             """)
     List<Object[]> findDailyRevenue(@Param("from") LocalDateTime from,
                                     @Param("to") LocalDateTime to);
+    Optional<Booking> findByOrderId(String orderId);
+
+
+    // Find bookings for a room that overlap with date range [checkIn, checkOut)
+    List<Booking> findByRoomIdAndCheckOutDateGreaterThanAndCheckInDateLessThan(
+            Long roomId, LocalDate checkIn, LocalDate checkOut);
+    List<Booking> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    List<Booking> findAllByOrderByCreatedAtDesc();
+
+    List<Booking> findByPaymentStatusAndReservationExpiresAtBefore(
+            String paymentStatus,
+            Instant time
+    );
+
 }

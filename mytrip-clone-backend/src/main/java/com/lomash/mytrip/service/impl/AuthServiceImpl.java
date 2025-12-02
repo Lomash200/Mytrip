@@ -15,7 +15,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,27 +47,31 @@ public class AuthServiceImpl implements AuthService {
         this.emailEventsService = emailEventsService;
     }
 
-    // ========================= LOGIN ===========================
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request) {
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
+                            request.getUsernameOrEmail(),
                             request.getPassword()
                     )
             );
 
-            String token = jwtUtils.generateToken(request.getUsername());
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            User user = userRepository.findByUsername(request.getUsernameOrEmail())
+                    .or(() -> userRepository.findByEmail(request.getUsernameOrEmail()))
+                    .orElseThrow(() -> new ApiException("User not found"));
+
+            String token = jwtUtils.generateToken(user.getUsername());
             return new LoginResponse(token, "Bearer");
 
-        } catch (AuthenticationException e) {
+        } catch (Exception e) {
             throw new ApiException("Invalid username or password");
         }
     }
 
-    // ======================== REGISTER ==========================
     @Override
     @Transactional
     public void register(RegisterRequest request) {
@@ -84,9 +87,9 @@ public class AuthServiceImpl implements AuthService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
                 .enabled(true)
+                .firstName(request.getUsername()) // Default to username
+                .lastName("")
                 .createdAt(Instant.now())
                 .build();
 
@@ -103,11 +106,14 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        // Send welcome email (if EmailEventsService implemented)
-       // emailEventsService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
+        // Send welcome email
+        try {
+            emailEventsService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
+        } catch (Exception e) {
+            System.out.println("Email sending failed: " + e.getMessage());
+        }
     }
 
-    // ===================== GET LOGGED USER =====================
     @Override
     @Transactional
     public User getLoggedUser() {

@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class SupportTicket {
 
@@ -19,6 +20,7 @@ public class SupportTicket {
     private String subject;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default  // ✅ FIX: Add this annotation
     private TicketStatus status = TicketStatus.OPEN;
 
     private LocalDateTime createdAt;

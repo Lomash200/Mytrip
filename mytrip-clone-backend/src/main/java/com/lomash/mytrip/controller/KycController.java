@@ -1,28 +1,29 @@
 package com.lomash.mytrip.controller;
 
-import com.lomash.mytrip.dto.kyc.*;
-import com.lomash.mytrip.service.KycService;
+import com.lomash.mytrip.common.ApiResponse;
+import com.lomash.mytrip.service.FileStorageService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/kyc")
 public class KycController {
 
-    private final KycService service;
+    private final FileStorageService fileStorageService;
 
-    public KycController(KycService service) {
-        this.service = service;
+    public KycController(FileStorageService fileStorageService) {
+        this.fileStorageService = fileStorageService;
     }
 
     @PostMapping("/upload")
-    public KycResponse upload(@RequestBody KycUploadRequest req) {
-        return service.uploadDocument(req);
-    }
+    public ApiResponse<?> uploadKyc(@RequestParam("file") MultipartFile file) {
 
-    @GetMapping("/my")
-    public List<KycResponse> myDocs() {
-        return service.myDocuments();
+        try {
+            String fileName = fileStorageService.saveFile(file, "kyc");
+            return ApiResponse.ok("KYC uploaded successfully", fileName);
+
+        } catch (Exception e) {
+            return ApiResponse.error("KYC upload failed: " + e.getMessage());
+        }
     }
 }

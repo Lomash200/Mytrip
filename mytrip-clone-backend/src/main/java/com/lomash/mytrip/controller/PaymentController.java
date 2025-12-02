@@ -1,12 +1,12 @@
 package com.lomash.mytrip.controller;
 
+import com.lomash.mytrip.common.ApiResponse;
 import com.lomash.mytrip.dto.payment.PaymentRequest;
 import com.lomash.mytrip.dto.payment.PaymentResponse;
-import com.lomash.mytrip.dto.payment.PaymentVerifyRequest;
-import com.lomash.mytrip.exception.ApiException;
 import com.lomash.mytrip.service.AuthService;
 import com.lomash.mytrip.service.FraudCheckService;
 import com.lomash.mytrip.service.PaymentService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,37 +27,37 @@ public class PaymentController {
         this.authService = authService;
     }
 
+    // =====================================
+    // CREATE ORDER
+    // =====================================
     @PostMapping("/create-order")
-    public ResponseEntity<PaymentResponse> createOrder(
-            @RequestBody PaymentRequest request,
-            HttpServletRequest httpRequest
-    ) {
+    public ResponseEntity<?> createOrder(@RequestBody PaymentRequest request, HttpServletRequest httpReq) {
 
         Long userId = authService.getLoggedUser().getId();
-        double amount = request.getAmount();
+        String ip = httpReq.getRemoteAddr();
 
-        // 🔥 IP FRAUD CHECK
-        String ip = httpRequest.getRemoteAddr();
+        // Fraud check
         if (fraudCheckService.isIpBlocked(ip)) {
-            throw new ApiException("Your network is temporarily restricted due to suspicious activity.");
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Suspicious activity detected. Try later!"));
         }
 
-        // 🔥 PAYMENT ATTEMPT CHECK
         fraudCheckService.recordPaymentAttempt(userId);
 
-        // 🔥 HIGH-AMOUNT + MULTIPLE ATTEMPTS = FRAUD
-        if (fraudCheckService.isPaymentSuspicious(userId, amount)) {
-            fraudCheckService.recordFraudEvent(userId,
-                    "High transaction amount with repeated attempts");
-            throw new ApiException("Payment flagged as suspicious. Please try again later.");
-        }
-
-        // Continue normal order creation
-        return ResponseEntity.ok(paymentService.createOrder(request));
+        // Create Razorpay order
+        PaymentResponse response = paymentService.createOrder(request);
+        return ResponseEntity.ok(response);
     }
 
+    // =====================================
+    // VERIFY PAYMENT
+    // =====================================
     @PostMapping("/verify")
-    public ResponseEntity<String> verify(@RequestBody PaymentVerifyRequest request) {
-        return ResponseEntity.ok(paymentService.verifyPayment(request));
+    public ApiResponse<String> verifyPayment(
+            @RequestParam String orderId,
+            @RequestParam String paymentId,
+            @RequestParam String signature
+    ) {
+        return paymentService.verifyPayment(orderId, paymentId, signature);
     }
 }

@@ -1,15 +1,24 @@
 package com.lomash.mytrip.dto.search;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class HotelSearchResponse {
-    private Long id;
-    private String name;
-    private String locationName;
+
+    private Long hotelId;
+    private String hotelName;
+    private String city;
+    private String address;
+
     private double rating;
-    private double priceFrom;
+    private int starCategory;
+
+    private double startingPrice;
+    private boolean available;
+
+    private String imageUrl;
 }

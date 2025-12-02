@@ -19,18 +19,23 @@ public class Hotel {
     private Long id;
 
     private String name;
-    private String description;
+    private String city;
     private String address;
-    private double rating;
+    private String description;
+
+    @Builder.Default
+    private double rating = 0.0;
+
+    @Builder.Default
+    private int starCategory = 3;
+
+    private String imageUrl;
 
     @ElementCollection
-    private List<String> images = new ArrayList<>();
+    @Builder.Default
+    private List<String> amenities = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "location_id")
-    private Location location;
-
-    // 🟦 ADD THIS (Fix for getRooms())
     @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Room> rooms = new ArrayList<>();
 }

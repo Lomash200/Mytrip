@@ -3,7 +3,7 @@ package com.lomash.mytrip.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lomash.mytrip.entity.Booking;
-import com.lomash.mytrip.entity.Payment;
+import com.lomash.mytrip.entity.PaymentRecord;
 import com.lomash.mytrip.entity.enums.BookingStatus;
 import com.lomash.mytrip.exception.ApiException;
 import com.lomash.mytrip.repository.BookingRepository;
@@ -111,7 +111,7 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             // -----------------------------
             // 4) Save Payment Record
             // -----------------------------
-            Payment payment = Payment.builder()
+            PaymentRecord payment = PaymentRecord.builder()
                     .orderId(orderId)
                     .paymentId(paymentId)
                     .signature(signature)

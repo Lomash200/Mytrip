@@ -1,56 +1,57 @@
 package com.lomash.mytrip.config;
 
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-
 import java.security.Key;
 import java.util.Date;
-
 
 @Component
 public class JwtUtils {
 
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
-    private final Key key;
-    private final long expirationMs;
+    @Value("${jwt.expirationMs}")
+    private long jwtExpirationMs;
 
-
-    public JwtUtils(@Value("${jwt.secret}") String secret, @Value("${jwt.expirationMs}") long expirationMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.expirationMs = expirationMs;
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-
     public String generateToken(String username) {
-        Date now = new Date();
-        Date exp = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
                 .setSubject(username)
-                .setIssuedAt(now)
-                .setExpiration(exp)
-                .signWith(key)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(new Date().getTime() + jwtExpirationMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-
     public String getUsernameFromToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
     }
 
-
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
+
+        } catch (ExpiredJwtException ex) {
+            System.out.println("JWT expired");
+        } catch (Exception ex) {
+            System.out.println("JWT invalid");
         }
+        return false;
     }
 }

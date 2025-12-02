@@ -3,53 +3,46 @@ package com.lomash.mytrip.service.impl;
 import com.lomash.mytrip.dto.hotel.HotelRequest;
 import com.lomash.mytrip.dto.hotel.HotelResponse;
 import com.lomash.mytrip.entity.Hotel;
-import com.lomash.mytrip.entity.Location;
+import com.lomash.mytrip.entity.Room;
 import com.lomash.mytrip.exception.ApiException;
 import com.lomash.mytrip.repository.HotelRepository;
-import com.lomash.mytrip.repository.LocationRepository;
+import com.lomash.mytrip.repository.RoomRepository;
 import com.lomash.mytrip.service.HotelService;
-
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class HotelServiceImpl implements HotelService {
 
     private final HotelRepository hotelRepository;
-    private final LocationRepository locationRepository;
+    private final RoomRepository roomRepository;
 
-    public HotelServiceImpl(HotelRepository hotelRepository, LocationRepository locationRepository) {
+    public HotelServiceImpl(HotelRepository hotelRepository,
+                            RoomRepository roomRepository) {
         this.hotelRepository = hotelRepository;
-        this.locationRepository = locationRepository;
-    }
-
-    private HotelResponse mapToResponse(Hotel hotel) {
-        return HotelResponse.builder()
-                .id(hotel.getId())
-                .name(hotel.getName())
-                .description(hotel.getDescription())
-                .address(hotel.getAddress())
-                .rating(hotel.getRating())
-                .locationName(hotel.getLocation().getName())
-                .build();
+        this.roomRepository = roomRepository;
     }
 
     @Override
     @Transactional
     public HotelResponse createHotel(HotelRequest request) {
-        Location location = locationRepository.findById(request.getLocationId())
-                .orElseThrow(() -> new ApiException("Invalid location"));
-
         Hotel hotel = Hotel.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .address(request.getAddress())
+                .city(request.getCity())
                 .rating(request.getRating())
-                .location(location)
                 .build();
 
-        return mapToResponse(hotelRepository.save(hotel));
+        hotel = hotelRepository.save(hotel);
+        return toResponse(hotel);
     }
 
     @Override
@@ -58,18 +51,14 @@ public class HotelServiceImpl implements HotelService {
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new ApiException("Hotel not found"));
 
-        if (request.getName() != null) hotel.setName(request.getName());
-        if (request.getDescription() != null) hotel.setDescription(request.getDescription());
-        if (request.getAddress() != null) hotel.setAddress(request.getAddress());
-        if (request.getRating() != 0) hotel.setRating(request.getRating());
+        hotel.setName(request.getName());
+        hotel.setDescription(request.getDescription());
+        hotel.setAddress(request.getAddress());
+        hotel.setCity(request.getCity());
+        hotel.setRating(request.getRating());
 
-        if (request.getLocationId() != null) {
-            Location location = locationRepository.findById(request.getLocationId())
-                    .orElseThrow(() -> new ApiException("Invalid location"));
-            hotel.setLocation(location);
-        }
-
-        return mapToResponse(hotelRepository.save(hotel));
+        hotelRepository.save(hotel);
+        return toResponse(hotel);
     }
 
     @Override
@@ -85,25 +74,67 @@ public class HotelServiceImpl implements HotelService {
     public HotelResponse getHotelById(Long id) {
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new ApiException("Hotel not found"));
-        return mapToResponse(hotel);
+        return toResponse(hotel);
     }
 
     @Override
     public Page<HotelResponse> getAllHotels(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        PageRequest pageable = PageRequest.of(page, size);
         Page<Hotel> hotels = hotelRepository.findAll(pageable);
 
-        return hotels.map(this::mapToResponse);
+        List<HotelResponse> dtoList = hotels.getContent()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+
+        return new PageImpl<>(dtoList, pageable, hotels.getTotalElements());
     }
 
     @Override
-    public void addHotelImage(Long hotelId, String url) {
+    public void addHotelImage(Long hotelId, String imageUrl) {
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new ApiException("Hotel not found"));
-
-        hotel.getImages().add(url);
+        hotel.setImageUrl(imageUrl);
         hotelRepository.save(hotel);
     }
 
+    @Override
+    public List<Hotel> searchHotels(String city, String name, Double minPrice, Double maxPrice) {
+        if (city != null && !city.isBlank()) {
+            return hotelRepository.findByCityIgnoreCase(city);
+        } else if (name != null && !name.isBlank()) {
+            return hotelRepository.findByNameContainingIgnoreCase(name);
+        } else {
+            return hotelRepository.findAll();
+        }
+    }
 
+    @Override
+    public Hotel getHotel(Long hotelId) {
+        return hotelRepository.findById(hotelId).orElse(null);
+    }
+
+    @Override
+    public List<Room> getRoomsForHotel(Long hotelId) {
+        return roomRepository.findByHotelId(hotelId);
+    }
+
+    @Override
+    public boolean isRoomAvailable(Long roomId, LocalDate checkIn, LocalDate checkOut) {
+        // Simplified - In production, check bookings
+        return true;
+    }
+
+    private HotelResponse toResponse(Hotel hotel) {
+        if (hotel == null) return null;
+
+        return HotelResponse.builder()
+                .id(hotel.getId())
+                .name(hotel.getName())
+                .description(hotel.getDescription())
+                .address(hotel.getAddress())
+                .locationName(hotel.getCity())
+                .rating(hotel.getRating())
+                .build();
+    }
 }

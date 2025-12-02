@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MyTrip - Admin/User Frontend Demo</title>
+    <style>
+        /* Simple, neutral styles so you can improve later */
+        :root{--accent:#0066cc;--muted:#666}
+        body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.4;margin:0;padding:0;background:#f6f7fb;color:#111}
+        header{background:white;padding:12px 20px;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between}
+        header h1{font-size:18px;margin:0}
+        main{padding:18px;max-width:1100px;margin:24px auto}
+        .container{display:grid;grid-template-columns:1fr;gap:12px}
+        .card{background:white;padding:12px;border:1px solid #e9edf3;border-radius:8px}
+        .row{display:flex;gap:12px}
+        input,select,textarea,button{padding:8px;border:1px solid #d7dbe6;border-radius:6px}
+        input:focus,select:focus,textarea:focus{outline:2px solid rgba(0,102,204,0.12);border-color:var(--accent)}
+        nav{display:flex;gap:8px}
+        a.btn{background:var(--accent);color:white;padding:8px 10px;border-radius:6px;text-decoration:none}
+        .muted{color:var(--muted);font-size:13px}
+        .small{font-size:13px}
+        pre{background:#072; color:#fff;padding:8px;border-radius:6px;overflow:auto}
+        .list{display:grid;gap:8px}
+        .list .item{padding:10px;border:1px solid #eef2f7;border-radius:6px;background:#fff}
+        footer{padding:12px;text-align:center;color:var(--muted);font-size:13px}
+        .hint{background:#fff3cd;border:1px solid #ffeeba;padding:10px;border-radius:6px}
+    </style>
+</head>
+<body>
+<header>
+    <h1>MyTrip — Frontend Demo (HTML/CSS/JS)</h1>
+    <nav>
+        <a href="#" id="nav-home" class="btn">Home</a>
+        <a href="#admin" id="nav-admin" class="btn">Admin</a>
+        <a href="#" id="nav-logout" style="display:none" class="btn">Logout</a>
+    </nav>
+</header>
+
+<main>
+    <div id="app" class="container">
+        <!-- Content injected by JS -->
+    </div>
+    <footer>Demo UI to exercise backend APIs — use to discover which APIs exist / fail.</footer>
+</main>
+
+<script>
+    /** CONFIG - set your backend base URL here **/
+    const baseUrl = localStorage.getItem('MYTRIP_BASEURL') || 'http://localhost:8080';
+    // You can change it at runtime with the "Set base URL" control in the UI.
+
+    const app = document.getElementById('app');
+    const navLogout = document.getElementById('nav-logout');
+
+    function api(path, opts={}){
+      const token = localStorage.getItem('MYTRIP_TOKEN');
+      const headers = opts.headers || {};
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+      if(token) headers['Authorization'] = 'Bearer ' + token;
+      const cfg = Object.assign({method:'GET',headers},opts);
+      if(cfg.body && typeof cfg.body==='object') cfg.body = JSON.stringify(cfg.body);
+      return fetch(baseUrl + path, cfg).then(async r => {
+        const ct = r.headers.get('content-type')||'';
+        let body = null;
+        if(ct.includes('application/json')) body = await r.json();
+        else body = await r.text();
+        return {ok:r.ok,status:r.status,body};
+      });
+    }
+
+    // --- Small Router ---
+    function showHome(){
+      app.innerHTML = `
+        <div class="card">
+          <h2>Quick Controls</h2>
+          <div class="row">
+            <input id="baseurl" placeholder="Backend base URL" value="${baseUrl}" style="flex:1" />
+            <button id="save-base">Set base URL</button>
+          </div>
+          <p class="muted">Set the base URL so all examples below call the correct server.</p>
+        </div>
+
+        <div class="card">
+          <h2>Auth (User)</h2>
+          <div class="row">
+            <input id="signup-user" placeholder='username' />
+            <input id="signup-email" placeholder='email' />
+            <input id="signup-pass" placeholder='password' />
+            <button id="btn-signup">Signup</button>
+          </div>
+          <div style="height:8px"></div>
+          <div class="row">
+            <input id="login-user" placeholder='username' />
+            <input id="login-pass" placeholder='password' />
+            <button id="btn-login">Login</button>
+          </div>
+          <div id="auth-result" class="muted small"></div>
+        </div>
+
+        <div class="card">
+          <h2>Hotel - Search & Booking</h2>
+          <div class="row">
+            <input id="city" placeholder="city" value="Indore" />
+            <input id="checkin" type="date" />
+            <input id="checkout" type="date" />
+            <button id="btn-search-hotels">Search Hotels</button>
+          </div>
+          <div id="hotels-list" class="list"></div>
+        </div>
+
+        <div class="card hint">
+          <strong>Note:</strong> This page calls several backend APIs directly. If a call fails you will see the status and body — use that to find missing / broken endpoints.
+        </div>
+      `;
+
+      document.getElementById('save-base').onclick = ()=>{
+        const val = document.getElementById('baseurl').value.trim();
+        localStorage.setItem('MYTRIP_BASEURL', val);
+        location.reload();
+      }
+
+      document.getElementById('btn-signup').onclick = async ()=>{
+        const username = document.getElementById('signup-user').value||'testuser';
+        const email = document.getElementById('signup-email').value||'test@local';
+        const password = document.getElementById('signup-pass').value||'Pass@123';
+        const res = await api('/api/auth/signup',{method:'POST',body:{username,email,password,fullName:username}});
+        document.getElementById('auth-result').innerText = JSON.stringify(res,null,2);
+      }
+
+      document.getElementById('btn-login').onclick = async ()=>{
+        const username = document.getElementById('login-user').value||'testuser';
+        const password = document.getElementById('login-pass').value||'Pass@123';
+        const res = await api('/api/auth/login',{method:'POST',body:{username,password}});
+        document.getElementById('auth-result').innerText = JSON.stringify(res,null,2);
+        if(res.ok && res.body && (res.body.token || res.body.accessToken || res.body.data?.token)){
+          const token = res.body.token || res.body.accessToken || res.body.data?.token;
+          localStorage.setItem('MYTRIP_TOKEN', token);
+          navLogout.style.display = 'inline-block';
+          alert('Login ok - token saved to localStorage');
+        }
+      }
+
+      document.getElementById('btn-search-hotels').onclick = async ()=>{
+        const city = document.getElementById('city').value||'Indore';
+        const checkin = document.getElementById('checkin').value || new Date().toISOString().slice(0,10);
+        const checkout = document.getElementById('checkout').value || new Date(Date.now()+2*86400000).toISOString().slice(0,10);
+        const res = await api(`/api/search/hotels?city=${encodeURIComponent(city)}&checkIn=${checkin}&checkOut=${checkout}&guests=2`);
+        const list = document.getElementById('hotels-list');
+        list.innerHTML='';
+        if(!res.ok){ list.innerHTML = '<pre>'+res.status+'\n'+JSON.stringify(res.body,null,2)+'</pre>'; return }
+        if(!Array.isArray(res.body)){
+          list.innerHTML = '<pre>Expected array, got:'+JSON.stringify(res.body,null,2)+'</pre>'; return
+        }
+        res.body.forEach(h =>{
+          const el = document.createElement('div'); el.className='item';
+          el.innerHTML = `<strong>${h.name || h.hotelName || 'Hotel'}</strong> <div class='muted small'>Price: ${h.startingPrice||h.price||h.amount||'N/A'}</div>
+          <div style='margin-top:8px'><button class='btn-book' data-id='${h.hotelId||h.id||h.hotel_id}'>Book</button> <button class='btn-details' data-id='${h.hotelId||h.id||h.hotel_id}'>Details</button></div>`;
+          list.appendChild(el);
+        });
+
+        // attach
+        list.querySelectorAll('.btn-book').forEach(b=>b.onclick=async (e)=>{
+          const hotelId = e.target.dataset.id;
+          const roomId = prompt('Enter roomId to book (find from details)');
+          if(!roomId) return;
+          const body = {hotelId: Number(hotelId), roomId: Number(roomId), checkIn: checkin, checkOut: checkout, guests:2};
+          const r = await api('/api/bookings',{method:'POST',body});
+          alert(JSON.stringify(r,null,2));
+        });
+
+        list.querySelectorAll('.btn-details').forEach(b=>b.onclick=async (e)=>{
+          const id = e.target.dataset.id;
+          const r = await api('/api/hotels/'+id);
+          alert(JSON.stringify(r,null,2));
+        });
+      }
+    }
+
+    function showAdmin(){
+      app.innerHTML = `
+        <div class="card">
+          <h2>Admin Console</h2>
+          <div class="row">
+            <input id="admin-user" placeholder="admin username" />
+            <input id="admin-pass" placeholder="admin password" />
+            <button id="admin-login">Login Admin</button>
+          </div>
+          <p class="muted">After admin login, token will be saved and you can call admin endpoints.</p>
+        </div>
+
+        <div class="card">
+          <h3>Admin Actions</h3>
+          <div class="row">
+            <button id="a-hotels">List Hotels (GET /api/admin/hotels)</button>
+            <button id="a-flights">List Flights (GET /api/admin/flights)</button>
+            <button id="a-bookings">List Bookings (GET /api/admin/bookings)</button>
+          </div>
+          <div id="admin-result"></div>
+        </div>
+      `;
+
+      document.getElementById('admin-login').onclick = async ()=>{
+        const u = document.getElementById('admin-user').value||'admin';
+        const p = document.getElementById('admin-pass').value||'admin';
+        // assume admin uses same auth path
+        const res = await api('/api/auth/login',{method:'POST',body:{username:u,password:p}});
+        document.getElementById('admin-result').innerText = JSON.stringify(res,null,2);
+        if(res.ok && res.body && (res.body.token || res.body.accessToken)){
+          const t = res.body.token || res.body.accessToken;
+          localStorage.setItem('MYTRIP_TOKEN', t);
+          navLogout.style.display = 'inline-block';
+          alert('Admin login OK - token saved');
+        }
+      }
+
+      document.getElementById('a-hotels').onclick = async ()=>{
+        const r = await api('/api/admin/hotels');
+        document.getElementById('admin-result').innerText = JSON.stringify(r,null,2);
+      }
+      document.getElementById('a-flights').onclick = async ()=>{
+        const r = await api('/api/admin/flights');
+        document.getElementById('admin-result').innerText = JSON.stringify(r,null,2);
+      }
+      document.getElementById('a-bookings').onclick = async ()=>{
+        const r = await api('/api/admin/bookings');
+        document.getElementById('admin-result').innerText = JSON.stringify(r,null,2);
+      }
+    }
+
+    // logout
+    navLogout.onclick = ()=>{ localStorage.removeItem('MYTRIP_TOKEN'); navLogout.style.display='none'; alert('Logged out'); }
+
+    document.getElementById('nav-home').onclick = (e)=>{ e.preventDefault(); showHome(); }
+    document.getElementById('nav-admin').onclick = (e)=>{ e.preventDefault(); showAdmin(); }
+
+    // initial view
+    showHome();
+
+</script>
+</body>
+</html>

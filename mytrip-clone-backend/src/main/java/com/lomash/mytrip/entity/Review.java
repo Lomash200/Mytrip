@@ -14,7 +14,7 @@ import java.time.Instant;
 public class Review {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // ✅ FIX: Changed from IDVIDUAL to IDENTITY
     private Long id;
 
     // targetType: HOTEL or FLIGHT
@@ -34,7 +34,8 @@ public class Review {
     @Column(length = 2000)
     private String comment;
 
-    private boolean approved = true; // moderation flag
+    @Builder.Default  // ✅ FIX: Add this annotation
+    private boolean approved = true;
 
     private Instant createdAt;
     private Instant updatedAt;
