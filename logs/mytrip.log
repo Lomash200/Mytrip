@@ -1,1 +1,9 @@
 2025-12-08T11:00:47.576+05:30  WARN 32060 --- [mytrip-clone-backend] [HikariPool-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=19h10m50s728ms839µs800ns).
+2025-12-08T11:05:11.145+05:30  WARN 32060 --- [mytrip-clone-backend] [HikariPool-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=4m32s382ms43µs300ns).
+2025-12-08T11:15:52.149+05:30  WARN 32060 --- [mytrip-clone-backend] [http-nio-8080-exec-7] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [com.lomash.mytrip.exception.ApiException: Invalid username or password]
+2025-12-08T11:15:53.180+05:30  WARN 32060 --- [mytrip-clone-backend] [http-nio-8080-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [com.lomash.mytrip.exception.ApiException: Invalid username or password]
+2025-12-08T11:15:53.376+05:30  WARN 32060 --- [mytrip-clone-backend] [http-nio-8080-exec-9] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [com.lomash.mytrip.exception.ApiException: Invalid username or password]
+2025-12-08T11:16:14.217+05:30  WARN 32060 --- [mytrip-clone-backend] [http-nio-8080-exec-8] ration$PageModule$WarningLoggingModifier : Serializing PageImpl instances as-is is not supported, meaning that there is no guarantee about the stability of the resulting JSON structure!
+	For a stable JSON structure, please use Spring Data's PagedModel (globally via @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO))
+	or Spring HATEOAS and Spring Data's PagedResourcesAssembler as documented in https://docs.spring.io/spring-data/commons/reference/repositories/core-extensions.html#core.web.pageables.
+
