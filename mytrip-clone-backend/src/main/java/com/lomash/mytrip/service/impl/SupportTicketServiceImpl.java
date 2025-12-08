@@ -57,6 +57,14 @@ public class SupportTicketServiceImpl implements SupportTicketService {
         return map(ticket);
     }
 
+    // Class ke end me daal de
+    @Override
+    public List<TicketResponse> getAllTickets() {
+        return ticketRepo.findAll()
+                .stream()
+                .map(this::map) // map method already niche hai
+                .toList();
+    }
     @Override
     public List<TicketResponse> getMyTickets() {
         return ticketRepo.findByUser(currentUser())

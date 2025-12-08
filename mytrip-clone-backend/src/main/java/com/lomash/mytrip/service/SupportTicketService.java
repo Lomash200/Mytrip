@@ -11,6 +11,7 @@ public interface SupportTicketService {
     List<TicketResponse> getMyTickets();
 
     List<MessageResponse> getTicketMessages(Long ticketId);
+    List<TicketResponse> getAllTickets();
 
     MessageResponse sendUserMessage(Long ticketId, MessageRequest request);
 

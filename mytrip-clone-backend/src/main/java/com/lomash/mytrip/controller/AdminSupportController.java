@@ -19,6 +19,10 @@ public class AdminSupportController {
         this.service = service;
     }
 
+    @GetMapping
+    public ResponseEntity<java.util.List<com.lomash.mytrip.dto.ticket.TicketResponse>> getAllTickets() {
+        return ResponseEntity.ok(service.getAllTickets());
+    }
     @PostMapping("/{ticketId}/reply")
     public ResponseEntity<MessageResponse> reply(
             @PathVariable Long ticketId,

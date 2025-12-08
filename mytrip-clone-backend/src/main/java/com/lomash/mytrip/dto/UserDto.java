@@ -1,6 +1,7 @@
 package com.lomash.mytrip.dto;
 
 import lombok.*;
+import java.util.List; // List import added
 
 @Data
 @NoArgsConstructor
@@ -14,4 +15,7 @@ public class UserDto {
     private String lastName;
     private String phone;
     private boolean enabled;
+
+    // 👇 Ye naya field add kiya hai
+    private List<String> roles;
 }
